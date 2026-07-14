@@ -101,6 +101,18 @@ img {
   transform: translateY(0);
 }
 
+/* Scale-in variant for portraits/photos — "coming into focus" instead of sliding up */
+.reveal-scale {
+  opacity: 0;
+  transform: scale(.92);
+  transition: opacity .8s ease, transform .8s ease;
+}
+
+.reveal-scale.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .glass-card {
   background: rgba(255, 255, 255, .9);
   backdrop-filter: blur(12px);
@@ -412,8 +424,24 @@ img {
   }
 
   .nav-menu a {
+    position: relative;
     padding: 0;
     border-bottom: none;
+  }
+
+  .nav-menu a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0;
+    height: 1.5px;
+    background: var(--accent);
+    transition: width .25s ease;
+  }
+
+  .nav-menu a:hover::after {
+    width: 100%;
   }
 
   .nav-cta {
@@ -470,6 +498,31 @@ img {
   display: flex;
   flex-direction: column;
 }
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-text > * {
+  opacity: 0;
+  animation: heroFadeUp .7s ease forwards;
+}
+
+.hero-text .section-label { animation-delay: .05s; }
+.hero-text .hero-title { animation-delay: .17s; }
+.hero-text .hero-sub { animation-delay: .29s; }
+.hero-text .hero-badge { animation-delay: .39s; }
+.hero-text .hero-actions { animation-delay: .49s; }
+.hero-text .social-proof { animation-delay: .55s; }
+.hero-text .hero-stats-row { animation-delay: .63s; }
 
 .hero-title {
   font-size: clamp(2rem, 4.5vw, 3.1rem);
@@ -647,12 +700,16 @@ img {
   .sobre-features .sf-item strong {font-size: 1rem;}
 
   .sobre .container .sobre-text p:first-of-type{margin-top: 10px;}
+  .sobre{position: relative;}
+  .sobre-schedule{transform: scale(.8);position: absolute;right: -60px !important;top: 0 !important;}
+
   .trust-note{display: none !important;}
 
   .porque{padding: 60px 20px 80px!important;}
   
   .depoimentos .depo-rating-count{display: none !important;}
   .footer{margin-bottom: 0 !important;}
+
 }
 
 /* BOOKING STRIP */
@@ -1787,6 +1844,15 @@ p {
   padding: 6px 6px 20px;
   margin: -6px -6px -20px;
   -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.depo-track.dragging {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  cursor: grabbing;
 }
 
 .depo-track::-webkit-scrollbar {
@@ -1807,6 +1873,14 @@ p {
   border-bottom-left-radius: 4px;
   padding: 24px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .06);
+  transform: scale(.95);
+  opacity: .55;
+  transition: transform .35s ease, opacity .35s ease;
+}
+
+.depo-bubble.in-focus {
+  transform: scale(1);
+  opacity: 1;
 }
 
 @media (max-width: 899px) {
@@ -1819,6 +1893,12 @@ p {
   .depo-bubble {
     flex: 0 0 88%;
     scroll-snap-align: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .depo-nav-btn {
+    display: none;
   }
 }
 
@@ -1964,18 +2044,19 @@ p {
   background: none;
   border: none;
   font-family: 'Inter', sans-serif;
-  font-weight: 700;
+  font-weight: 400;
   font-size: .98rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
   color: var(--text);
-  transition: color .2s ease;
+  transition: color .2s ease, font-weight .2s ease;
 }
 
 .faq-q:hover {
   color: var(--primary);
+  font-weight: 700;
 }
 
 .faq-item.open .faq-q {
@@ -2507,7 +2588,18 @@ body {
     scroll-behavior: auto !important;
   }
 
-  .reveal {
+  .reveal,
+  .reveal-scale {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero-text > * {
+    opacity: 1;
+    animation: none;
+  }
+
+  .depo-bubble {
     opacity: 1;
     transform: none;
   }

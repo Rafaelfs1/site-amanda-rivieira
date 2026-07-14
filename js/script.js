@@ -33,7 +33,7 @@ document.querySelectorAll('.nav-menu a').forEach(a => a.addEventListener('click'
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.12 });
-document.querySelectorAll('.reveal').forEach((el, i) => {
+document.querySelectorAll('.reveal, .reveal-scale').forEach((el, i) => {
   el.style.transitionDelay = (i % 4 * 0.1) + 's';
   obs.observe(el);
 });
@@ -102,6 +102,13 @@ document.querySelectorAll('.counter').forEach(el => counterObs.observe(el));
 
 // Slider (depoimentos)
 const depoTrack = document.getElementById('testimonialSlider');
+
+// Focus the centered/most-visible bubble, dim the ones peeking at the edges
+const depoFocusObs = new IntersectionObserver(entries => {
+  entries.forEach(e => e.target.classList.toggle('in-focus', e.intersectionRatio > 0.75));
+}, { root: depoTrack, threshold: [0, 0.25, 0.5, 0.75, 1] });
+document.querySelectorAll('.depo-bubble').forEach(b => depoFocusObs.observe(b));
+
 function slideMove(dir) {
   const bubble = depoTrack.querySelector('.depo-bubble');
   const step = bubble.offsetWidth + parseFloat(getComputedStyle(depoTrack).gap || 24);
@@ -124,6 +131,42 @@ if (!prefersReducedMotion) {
   depoTrack.addEventListener('touchstart', pauseDepoAuto, { passive: true });
   depoTrack.addEventListener('mouseleave', resumeDepoAuto);
 }
+
+// Drag-to-swipe for the testimonials track (mouse drag doesn't scroll overflow-x natively)
+(() => {
+  let dragging = false;
+  let startX = 0;
+  let startScroll = 0;
+  let moved = false;
+
+  depoTrack.addEventListener('pointerdown', e => {
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startScroll = depoTrack.scrollLeft;
+    depoTrack.classList.add('dragging');
+  });
+
+  depoTrack.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    depoTrack.scrollLeft = startScroll - dx;
+  });
+
+  const endDrag = () => {
+    dragging = false;
+    depoTrack.classList.remove('dragging');
+  };
+  depoTrack.addEventListener('pointerup', endDrag);
+  depoTrack.addEventListener('pointerleave', endDrag);
+  depoTrack.addEventListener('pointercancel', endDrag);
+
+  // Swallow the click that follows a real drag so it doesn't trigger anything underneath
+  depoTrack.addEventListener('click', e => {
+    if (moved) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+})();
 
 // Chat mockup (contato) — múltiplas conversas em loop
 const phoneChat = document.getElementById('phoneChat');
