@@ -64,6 +64,42 @@ const counterObs = new IntersectionObserver(entries => {
 }, { threshold: 0.5 });
 document.querySelectorAll('.counter').forEach(el => counterObs.observe(el));
 
+// Servicos stacking cards (mobile/tablet <900px) — mirrors the sticky "top" in CSS
+(() => {
+  const cards = Array.from(document.querySelectorAll('.servico-card'));
+  if (!cards.length || prefersReducedMotion) return;
+  const stickyTop = 96;
+  const maxShrink = 0.06;
+
+  let ticking = false;
+  function updateStack() {
+    ticking = false;
+    if (window.innerWidth >= 900) {
+      cards.forEach(c => { c.style.transform = ''; c.style.filter = ''; });
+      return;
+    }
+    for (let i = 0; i < cards.length - 1; i++) {
+      const nextTop = cards[i + 1].getBoundingClientRect().top;
+      const cardHeight = cards[i].offsetHeight || 320;
+      const progress = Math.min(Math.max(1 - (nextTop - stickyTop) / cardHeight, 0), 1);
+      cards[i].style.transform = `scale(${1 - progress * maxShrink})`;
+      cards[i].style.filter = `brightness(${1 - progress * 0.12})`;
+    }
+    const last = cards[cards.length - 1];
+    last.style.transform = '';
+    last.style.filter = '';
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(updateStack);
+    }
+  }, { passive: true });
+  window.addEventListener('resize', updateStack);
+  updateStack();
+})();
+
 // Slider (depoimentos)
 const depoTrack = document.getElementById('testimonialSlider');
 function slideMove(dir) {
